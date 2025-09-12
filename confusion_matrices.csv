@@ -1,0 +1,4 @@
+Model,TN,FP,FN,TP
+Random Forest,894,2,49,55
+XGBoost,892,4,31,73
+Neural Network,891,5,27,77
