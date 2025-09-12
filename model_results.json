@@ -1,0 +1,5 @@
+{
+    "Random Forest": 0.949,
+    "XGBoost": 0.965,
+    "Neural Network": 0.968
+}

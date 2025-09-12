@@ -1,0 +1,114 @@
+[project]
+name = "predictive-maintenance-turbofan"
+version = "1.0.0"
+description = "Predictive Maintenance for NASA Turbofan Engines using Machine Learning"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+
+# Core dependencies - matching your installed versions
+dependencies = [
+    "numpy>=2.3.3",
+    "pandas>=2.3.2",
+    "scipy>=1.16.2",
+    "scikit-learn>=1.7.2",
+    "matplotlib>=3.10.6",
+    "seaborn>=0.13.2",
+    "joblib>=1.5.2",
+    "tqdm>=4.67.1",
+    "xgboost>=3.0.5",
+]
+
+# Optional dependencies
+[project.optional-dependencies]
+dl = [
+    "tensorflow>=2.20.0",
+    "keras>=3.11.3"
+]
+
+app = [
+    "streamlit>=1.46.0",  # Will install latest
+    "plotly>=5.24.1"      # Will install latest
+]
+
+dev = [
+    "jupyterlab>=4.4.7",
+    "ipython>=9.5.0",
+    "typer>=0.17.4",
+    "rich>=14.1.0"
+]
+
+all = [
+    "tensorflow>=2.20.0",
+    "keras>=3.11.3",
+    "streamlit>=1.46.0",
+    "plotly>=5.24.1",
+    "typer>=0.17.4",
+    "rich>=14.1.0",
+    "jupyterlab>=4.4.7",
+    "ipython>=9.5.0"
+]
+
+# Project scripts
+[project.scripts]
+turbofan-cli = "main:main"
+
+[build-system]
+requires = ["setuptools>=80.9.0"]
+build-backend = "setuptools.build_meta"
+
+# Tool configurations
+[tool.black]
+line-length = 88
+target-version = ['py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.nox
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | notebooks
+)/|
+\.ipynb_checkpoints
+'''
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "DJ",  # flake8-django
+]
+ignore = ["E501"]  # Allow long lines (handled by black)
+exclude = [
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".tox",
+    ".venv",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "notebooks",
+    "*.ipynb"
+]
+
+[tool.ruff.isort]
+known-first-party = ["src"]
