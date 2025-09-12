@@ -1,7 +1,7 @@
 [project]
 name = "predictive-maintenance-turbofan"
 version = "1.0.0"
-description = "Predictive Maintenance for NASA Turbofan Engines using Machine Learning"
+description = "Predictive Maintenance for NASA Turbofan Engines using Machine Learning & Deep Learning"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
