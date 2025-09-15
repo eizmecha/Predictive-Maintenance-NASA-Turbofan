@@ -1,0 +1,41 @@
+Metadata-Version: 2.4
+Name: predictive-maintenance-turbofan
+Version: 1.0.0
+Summary: Predictive Maintenance for NASA Turbofan Engines using Machine Learning & Deep Learning
+License-Expression: MIT
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=2.3.3
+Requires-Dist: pandas>=2.3.2
+Requires-Dist: scipy>=1.16.2
+Requires-Dist: scikit-learn>=1.7.2
+Requires-Dist: matplotlib>=3.10.6
+Requires-Dist: seaborn>=0.13.2
+Requires-Dist: joblib>=1.5.2
+Requires-Dist: tqdm>=4.67.1
+Requires-Dist: xgboost>=3.0.5
+Provides-Extra: dl
+Requires-Dist: tensorflow>=2.20.0; extra == "dl"
+Requires-Dist: keras>=3.11.3; extra == "dl"
+Provides-Extra: app
+Requires-Dist: streamlit>=1.46.0; extra == "app"
+Requires-Dist: plotly>=5.24.1; extra == "app"
+Provides-Extra: dev
+Requires-Dist: jupyterlab>=4.4.7; extra == "dev"
+Requires-Dist: ipython>=9.5.0; extra == "dev"
+Requires-Dist: typer>=0.17.4; extra == "dev"
+Requires-Dist: rich>=14.1.0; extra == "dev"
+Provides-Extra: all
+Requires-Dist: tensorflow>=2.20.0; extra == "all"
+Requires-Dist: keras>=3.11.3; extra == "all"
+Requires-Dist: streamlit>=1.46.0; extra == "all"
+Requires-Dist: plotly>=5.24.1; extra == "all"
+Requires-Dist: typer>=0.17.4; extra == "all"
+Requires-Dist: rich>=14.1.0; extra == "all"
+Requires-Dist: jupyterlab>=4.4.7; extra == "all"
+Requires-Dist: ipython>=9.5.0; extra == "all"
+Dynamic: license-file
+
+# Predictive-Maintenance-NASA-Turbofan
+Predictive Maintenance for NASA Turbofan Engines using Machine Learning & Deep Learning
