@@ -404,3 +404,269 @@ if __name__ == "__main__":
         print(f"❌ Error: {e}")
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
+
+# Set consistent plotting style
+plt.style.use('default')
+sns.set_style("whitegrid")
+plt.rcParams['figure.figsize'] = (10, 6)
+
+def load_processed_data(data_path):
+    try:
+        df = pd.read_csv(data_path)
+        print(f"Processed data loaded successfully from: {data_path}")
+        return df
+    except FileNotFoundError:
+        print(f" Error: Processed data file not found at {data_path}")
+        print("Please run preprocessing first to create the processed data.")
+        return None
+    except Exception as e:
+        print(f" Error loading processed data: {e}")
+        return None
+
+def prepare_data(df, test_size=0.2, random_state=42):
+    print(" Preparing data for modeling...")
+    
+    # Separate features (X) and target (y)
+    feature_columns = [col for col in df.columns if col not in ['unit_id', 'time_cycles', 'RUL']]
+    X = df[feature_columns]
+    y = df['RUL']
+    
+    # Split the data
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=test_size, random_state=random_state
+    )
+    
+    print(f"Training set: {X_train.shape}")
+    print(f"Validation set: {X_val.shape}")
+    print(f"Number of features: {len(feature_columns)}")
+    
+    return X_train, X_val, y_train, y_val, feature_columns
+
+def evaluate_model(model, model_name, X_train, y_train, X_val, y_val):
+    print(f"\n Training {model_name}...")
+    
+    # Train the model
+    model.fit(X_train, y_train)
+    
+    # Predict on validation set
+    y_pred = model.predict(X_val)
+    
+    # Calculate metrics
+    rmse = np.sqrt(mean_squared_error(y_val, y_pred))
+    mae = mean_absolute_error(y_val, y_pred)
+    r2 = r2_score(y_val, y_pred)
+    
+    # Create performance dictionary
+    performance = {
+        'RMSE': rmse,
+        'MAE': mae, 
+        'R2': r2,
+        'Model': model
+    }
+    
+    print(f"{model_name} Results:")
+    print(f"  RMSE: {rmse:.2f}")
+    print(f"  MAE: {mae:.2f}") 
+    print(f"  R²: {r2:.4f}")
+    
+    return model, y_pred, performance
+
+def train_all_models(X_train, y_train, X_val, y_val):
+    print(" Training Multiple Models for Comparison")
+    print("=" * 50)
+    
+    model_performance = {}
+    
+    # Model 1: Linear Regression
+    lr_model, lr_preds, lr_perf = evaluate_model(
+        LinearRegression(), "Linear Regression", X_train, y_train, X_val, y_val
+    )
+    model_performance['Linear Regression'] = lr_perf
+    
+    # Model 2: Random Forest
+    rf_model, rf_preds, rf_perf = evaluate_model(
+        RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1),
+        "Random Forest", X_train, y_train, X_val, y_val
+    )
+    model_performance['Random Forest'] = rf_perf
+    
+    # Model 3: XGBoost
+    xgb_model, xgb_preds, xgb_perf = evaluate_model(
+        XGBRegressor(n_estimators=100, random_state=42, n_jobs=-1),
+        "XGBoost", X_train, y_train, X_val, y_val
+    )
+    model_performance['XGBoost'] = xgb_perf
+    
+    return model_performance
+
+def plot_performance_comparison(performance_dict):
+    # Create DataFrame for easy comparison
+    perf_df = pd.DataFrame.from_dict(
+        {k: {m: v for m, v in v.items() if m != 'Model'} 
+         for k, v in performance_dict.items()}, 
+        orient='index'
+    )
+    
+    # Sort by RMSE (lower is better)
+    perf_df = perf_df.sort_values('RMSE')
+    
+    # Plot performance comparison
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    
+    # RMSE Comparison
+    colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
+    bars = ax1.bar(perf_df.index, perf_df['RMSE'], color=colors, alpha=0.8)
+    ax1.set_title('Model Comparison: RMSE (Lower is Better)')
+    ax1.set_ylabel('Root Mean Squared Error')
+    ax1.tick_params(axis='x', rotation=45)
+    
+    # Add value labels on bars
+    for bar in bars:
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+                f'{height:.1f}', ha='center', va='bottom')
+    
+    # R² Comparison
+    bars = ax2.bar(perf_df.index, perf_df['R2'], color=colors, alpha=0.8)
+    ax2.set_title('Model Comparison: R² Score (Higher is Better)')
+    ax2.set_ylabel('R² Score')
+    ax2.tick_params(axis='x', rotation=45)
+    
+    # Add value labels on bars
+    for bar in bars:
+        height = bar.get_height()
+        ax2.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                f'{height:.3f}', ha='center', va='bottom')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    return perf_df
+
+def plot_true_vs_predicted(y_true, y_pred, model_name):
+    plt.figure(figsize=(10, 6))
+    
+    # Create scatter plot
+    plt.scatter(y_true, y_pred, alpha=0.6, color='steelblue')
+    
+    # Add perfect prediction line
+    max_val = max(max(y_true), max(y_pred))
+    min_val = min(min(y_true), min(y_pred))
+    plt.plot([min_val, max_val], [min_val, max_val], 'r--', lw=2, label='Perfect Prediction')
+    
+    plt.xlabel('True RUL')
+    plt.ylabel('Predicted RUL')
+    plt.title(f'True vs Predicted RUL: {model_name}\n(RMSE: {np.sqrt(mean_squared_error(y_true, y_pred)):.2f})')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+def plot_feature_importance(model, feature_names, model_name, top_n=15):
+    # Get feature importance
+    if hasattr(model, 'feature_importances_'):
+        importance = model.feature_importances_
+    elif hasattr(model, 'get_booster'):
+        importance = model.get_booster().get_score(importance_type='weight')
+        # Convert to array format matching feature_names
+        importance = np.array([importance.get(f, 0) for f in feature_names])
+    else:
+        print("Model doesn't have feature importance attribute")
+        return None
+    
+    # Create DataFrame
+    feat_imp = pd.DataFrame({
+        'feature': feature_names,
+        'importance': importance
+    }).sort_values('importance', ascending=False).head(top_n)
+    
+    # Plot
+    plt.figure(figsize=(12, 8))
+    bars = plt.barh(range(len(feat_imp)), feat_imp['importance'], color='#2E86AB')
+    plt.yticks(range(len(feat_imp)), feat_imp['feature'])
+    plt.xlabel('Importance')
+    plt.title(f'Top {top_n} Feature Importances: {model_name}')
+    plt.gca().invert_yaxis()  # Most important at top
+    
+    # Add value labels
+    for i, (idx, row) in enumerate(feat_imp.iterrows()):
+        plt.text(row['importance'] + 0.001, i, f'{row["importance"]:.3f}', 
+                va='center', fontweight='bold')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    return feat_imp
+
+def save_model(model, filepath):
+    # Create directory if it doesn't exist
+    model_dir = os.path.dirname(filepath)
+    os.makedirs(model_dir, exist_ok=True)
+    
+    joblib.dump(model, filepath)
+    print(f" Model saved to: {filepath}")
+
+def main(data_path=None):
+    print(" Starting Model Training Pipeline")
+    print("=" * 50)
+    
+    # Get the absolute path to the project root
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    # Use default path if not provided
+    if data_path is None:
+        data_path = os.path.join('data', 'processed', 'train_FD001_processed.csv')
+    
+    print(f"Looking for processed data at: {data_path}")
+    
+    # Load processed data
+    processed_data = load_processed_data(data_path)
+    if processed_data is None:
+        exit(1)
+    
+    # Prepare data for modeling
+    X_train, X_val, y_train, y_val, feature_columns = prepare_data(processed_data)
+    
+    # Train all models
+    performance = train_all_models(X_train, y_train, X_val, y_val)
+    
+    # Compare performance
+    perf_df = plot_performance_comparison(performance)
+    
+    # Identify best model
+    best_model_name = perf_df.index[0]
+    best_model = performance[best_model_name]['Model']
+    best_preds = best_model.predict(X_val)
+    
+    print(f"\n Best Model: {best_model_name}")
+    print(f"   Validation RMSE: {perf_df.loc[best_model_name, 'RMSE']:.2f}")
+    
+    # Plot true vs predicted for best model
+    plot_true_vs_predicted(y_val, best_preds, best_model_name)
+    
+    # Plot feature importance for tree-based models
+    if best_model_name in ['Random Forest', 'XGBoost']:
+        feature_importance = plot_feature_importance(best_model, feature_columns, best_model_name)
+    
+    # Save the best model
+    models_dir = os.path.join(project_root, 'models')
+    model_filename = f'{best_model_name.lower().replace(" ", "_")}_model.pkl'
+    model_path = os.path.join(models_dir, model_filename)
+    save_model(best_model, model_path)
+    
+    return best_model, perf_df
+
+if __name__ == "__main__":
+    # Run the training pipeline
+    main()
