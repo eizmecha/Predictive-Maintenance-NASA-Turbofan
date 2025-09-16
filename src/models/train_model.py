@@ -1,38 +1,29 @@
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
-import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
+import os
+
+# Import utility modules
+from src.utils.metrics import calculate_metrics, print_metrics
+from src.utils.io import save_model
 
 # Set consistent plotting style
 plt.style.use('default')
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (10, 6)
 
-def load_processed_data(data_path):
-    try:
-        df = pd.read_csv(data_path)
-        print(f"Processed data loaded successfully from: {data_path}")
-        return df
-    except FileNotFoundError:
-        print(f" Error: Processed data file not found at {data_path}")
-        print("Please run preprocessing first to create the processed data.")
-        return None
-    except Exception as e:
-        print(f" Error loading processed data: {e}")
-        return None
 
 def prepare_data(df, test_size=0.2, random_state=42):
-    print(" Preparing data for modeling...")
+
+    print("📊 Preparing data for modeling...")
     
     # Separate features (X) and target (y)
+    # Exclude identifiers, time, and the target variable
     feature_columns = [col for col in df.columns if col not in ['unit_id', 'time_cycles', 'RUL']]
     X = df[feature_columns]
     y = df['RUL']
@@ -48,8 +39,10 @@ def prepare_data(df, test_size=0.2, random_state=42):
     
     return X_train, X_val, y_train, y_val, feature_columns
 
+
 def evaluate_model(model, model_name, X_train, y_train, X_val, y_val):
-    print(f"\n Training {model_name}...")
+
+    print(f"\n🔍 Training {model_name}...")
     
     # Train the model
     model.fit(X_train, y_train)
@@ -57,28 +50,26 @@ def evaluate_model(model, model_name, X_train, y_train, X_val, y_val):
     # Predict on validation set
     y_pred = model.predict(X_val)
     
-    # Calculate metrics
-    rmse = np.sqrt(mean_squared_error(y_val, y_pred))
-    mae = mean_absolute_error(y_val, y_pred)
-    r2 = r2_score(y_val, y_pred)
+    # Calculate metrics using utility function
+    metrics = calculate_metrics(y_val, y_pred)
     
     # Create performance dictionary
     performance = {
-        'RMSE': rmse,
-        'MAE': mae, 
-        'R2': r2,
+        'RMSE': metrics['RMSE'],
+        'MAE': metrics['MAE'], 
+        'R2': metrics['R2'],
         'Model': model
     }
     
-    print(f"{model_name} Results:")
-    print(f"  RMSE: {rmse:.2f}")
-    print(f"  MAE: {mae:.2f}") 
-    print(f"  R²: {r2:.4f}")
+    # Print metrics using utility function
+    print_metrics(metrics, model_name=model_name)
     
     return model, y_pred, performance
 
+
 def train_all_models(X_train, y_train, X_val, y_val):
-    print(" Training Multiple Models for Comparison")
+
+    print("🚀 Training Multiple Models for Comparison")
     print("=" * 50)
     
     model_performance = {}
@@ -105,7 +96,9 @@ def train_all_models(X_train, y_train, X_val, y_val):
     
     return model_performance
 
+
 def plot_performance_comparison(performance_dict):
+
     # Create DataFrame for easy comparison
     perf_df = pd.DataFrame.from_dict(
         {k: {m: v for m, v in v.items() if m != 'Model'} 
@@ -149,7 +142,12 @@ def plot_performance_comparison(performance_dict):
     
     return perf_df
 
+
 def plot_true_vs_predicted(y_true, y_pred, model_name):
+
+    # Calculate metrics for the plot title
+    metrics = calculate_metrics(y_true, y_pred)
+    
     plt.figure(figsize=(10, 6))
     
     # Create scatter plot
@@ -162,12 +160,14 @@ def plot_true_vs_predicted(y_true, y_pred, model_name):
     
     plt.xlabel('True RUL')
     plt.ylabel('Predicted RUL')
-    plt.title(f'True vs Predicted RUL: {model_name}\n(RMSE: {np.sqrt(mean_squared_error(y_true, y_pred)):.2f})')
+    plt.title(f'True vs Predicted RUL: {model_name}\n(RMSE: {metrics["RMSE"]:.2f})')
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.show()
 
+
 def plot_feature_importance(model, feature_names, model_name, top_n=15):
+
     # Get feature importance
     if hasattr(model, 'feature_importances_'):
         importance = model.feature_importances_
@@ -203,31 +203,25 @@ def plot_feature_importance(model, feature_names, model_name, top_n=15):
     
     return feat_imp
 
-def save_model(model, filepath):
-    # Create directory if it doesn't exist
-    model_dir = os.path.dirname(filepath)
-    os.makedirs(model_dir, exist_ok=True)
-    
-    joblib.dump(model, filepath)
-    print(f" Model saved to: {filepath}")
-
 def main(data_path=None):
-    print(" Starting Model Training Pipeline")
+
+    print("🎯 Starting Model Training Pipeline")
     print("=" * 50)
     
-    # Get the absolute path to the project root
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    # Use default path if not provided
+    # Use default path if none provided
     if data_path is None:
-        data_path = os.path.join('data', 'processed', 'train_FD001_processed.csv')
+        data_path = 'data/processed/train_FD001_processed.csv'
     
-    print(f"Looking for processed data at: {data_path}")
+    # Check if data file exists
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Processed data file not found at: {data_path}\n"
+                               f"Current working directory: {os.getcwd()}\n"
+                               f"Please run the preprocessing phase first.")
     
     # Load processed data
-    processed_data = load_processed_data(data_path)
-    if processed_data is None:
-        exit(1)
+    print("📁 Loading processed data...")
+    processed_data = pd.read_csv(data_path)
+    print(f"Loaded data shape: {processed_data.shape}")
     
     # Prepare data for modeling
     X_train, X_val, y_train, y_val, feature_columns = prepare_data(processed_data)
@@ -243,7 +237,7 @@ def main(data_path=None):
     best_model = performance[best_model_name]['Model']
     best_preds = best_model.predict(X_val)
     
-    print(f"\n Best Model: {best_model_name}")
+    print(f"\n🏆 Best Model: {best_model_name}")
     print(f"   Validation RMSE: {perf_df.loc[best_model_name, 'RMSE']:.2f}")
     
     # Plot true vs predicted for best model
@@ -253,14 +247,19 @@ def main(data_path=None):
     if best_model_name in ['Random Forest', 'XGBoost']:
         feature_importance = plot_feature_importance(best_model, feature_columns, best_model_name)
     
-    # Save the best model
-    models_dir = os.path.join(project_root, 'models')
-    model_filename = f'{best_model_name.lower().replace(" ", "_")}_model.pkl'
-    model_path = os.path.join(models_dir, model_filename)
-    save_model(best_model, model_path)
+    # Save the best model using utility function
+    model_filename = f'models/{best_model_name.lower().replace(" ", "_")}_model.pkl'
+    save_model(best_model, model_filename)
     
     return best_model, perf_df
 
+
+# Only run if this script is executed directly (not when imported)
 if __name__ == "__main__":
-    # Run the training pipeline
-    main()
+    # This will only run if you execute: python train_model.py
+    try:
+        main()  # No argument needed - uses default path
+    except FileNotFoundError as e:
+        print(f" Error: {e}")
+    except Exception as e:
+        print(f" Unexpected error: {e}")
