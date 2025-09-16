@@ -1,5 +1,3 @@
-Here's your professional README.md file based on your project structure:
-
 ```markdown
 # Predictive Maintenance for NASA Turbofan Engines
 
