@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
 
-# Core dependencies - matching your installed versions
+# Core dependencies
 dependencies = [
     "numpy>=2.3.3",
     "pandas>=2.3.2",
@@ -27,8 +27,8 @@ dl = [
 ]
 
 app = [
-    "streamlit>=1.46.0",  # Will install latest
-    "plotly>=5.24.1"      # Will install latest
+    "streamlit>=1.46.0",
+    "plotly>=5.24.1"
 ]
 
 dev = [
@@ -49,7 +49,7 @@ all = [
     "ipython>=9.5.0"
 ]
 
-# Project scripts
+# Project scripts - ONLY ONE ENTRY
 [project.scripts]
 turbofan-cli = "main:main"
 
@@ -93,7 +93,7 @@ select = [
     "UP",  # pyupgrade
     "DJ",  # flake8-django
 ]
-ignore = ["E501"]  # Allow long lines (handled by black)
+ignore = ["E501"]
 exclude = [
     ".eggs",
     ".git",
@@ -112,3 +112,12 @@ exclude = [
 
 [tool.ruff.isort]
 known-first-party = ["src"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "isort",
+    "flake8"
+]

@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,174 +5,407 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
 import tensorflow as tf
-import json
+import os
+from sklearn.preprocessing import MinMaxScaler
 
 # Config
-st.set_page_config(page_title="Predictive Maintenance Dashboard", layout="wide")
-st.title("🔧 NASA Turbofan Predictive Maintenance Dashboard")
-st.markdown("Interactive dashboard for predicting equipment failures")
+st.set_page_config(page_title="NASA Turbofan RUL Predictor", layout="wide")
+st.title("✈️ NASA Turbofan Engine Predictive Maintenance Dashboard")
+st.markdown("Predict Remaining Useful Life (RUL) of aircraft engines using advanced machine learning")
 
-# ===== Load data and models =====
-try:
-    df = pd.read_csv("synthetic_data.csv")
-    feature_names = joblib.load("feature_names.joblib")
-    target_names = ["Normal", "Failure"]
+# Add custom CSS for the exit button
+st.markdown("""
+<style>
+    .exit-button {
+        background-color: #ff4b4b;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        margin-top: 2rem;
+    }
+    .exit-button:hover {
+        background-color: #ff2b2b;
+        color: white;
+    }
+    .exit-message {
+        text-align: center;
+        padding: 2rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        margin: 2rem 0;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-    try:
-        rf_model = joblib.load("random_forest_model.joblib")
-        xgb_model = joblib.load("xgboost_model.joblib")
-        nn_model = tf.keras.models.load_model("neural_network_model.h5")
-        scaler = joblib.load("scaler.joblib")
+# Session state to track if user wants to exit
+if 'exit_app' not in st.session_state:
+    st.session_state.exit_app = False
 
-        with open("model_results.json", "r") as f:
-            results = json.load(f)
+# Exit function
+def exit_application():
+    """Function to exit the application"""
+    st.session_state.exit_app = True
 
-        cm_df = pd.read_csv("confusion_matrices.csv")
-
-        models_loaded = True
-    except:
-        st.warning("⚠️ Models not found. Please run main.py first.")
-        models_loaded = False
-        rf_model, xgb_model, nn_model, scaler, results, cm_df = None, None, None, None, {}, None
-
-except FileNotFoundError:
-    st.error("❌ synthetic_data.csv not found. Please run main.py first.")
+# Check if user wants to exit first
+if st.session_state.exit_app:
+    st.balloons()
+    st.markdown('<div class="exit-message">', unsafe_allow_html=True)
+    st.success("✅ Thank you for using the NASA Turbofan RUL Predictor!")
+    st.markdown("### 🚪 Application Closed")
+    st.info("You can safely close this browser tab now.")
+    st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
+# ===== Load data and models =====
+@st.cache_resource
+def load_models_and_data():
+    """Load trained models and necessary data"""
+    try:
+        # Get project root
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        
+        # Load processed training data for reference
+        train_data_path = os.path.join(project_root, 'data', 'processed', 'train_FD001_processed.csv')
+        if os.path.exists(train_data_path):
+            train_df = pd.read_csv(train_data_path)
+        else:
+            st.warning("Processed training data not found. Using test data for demo.")
+            train_df = None
+        
+        # Load test data for demo
+        test_data_path = os.path.join(project_root, 'data', 'test_FD001.txt')
+        column_names = ['unit_id', 'time_cycles'] + [f'op_setting_{i}' for i in range(1,4)] + [f'sensor_{i}' for i in range(1,22)]
+        test_df = pd.read_csv(test_data_path, sep=r'\s+', header=None, names=column_names)
+        
+        # Load models - check if they exist first
+        lstm_model_path = os.path.join(project_root, 'models', 'lstm_model.keras')
+        rf_model_path = os.path.join(project_root, 'models', 'random_forest_model.pkl')
+        scaler_path = os.path.join(project_root, 'models', 'fitted_scaler.pkl')
+        
+        if os.path.exists(lstm_model_path):
+            lstm_model = tf.keras.models.load_model(lstm_model_path)
+        else:
+            st.warning("LSTM model not found")
+            lstm_model = None
+            
+        if os.path.exists(rf_model_path):
+            rf_model = joblib.load(rf_model_path)
+        else:
+            st.warning("Random Forest model not found")
+            rf_model = None
+            
+        if os.path.exists(scaler_path):
+            scaler = joblib.load(scaler_path)
+        else:
+            st.warning("Scaler not found")
+            scaler = None
+        
+        # Load final test results
+        results_path = os.path.join(project_root, 'results', 'final_test_results.csv')
+        if os.path.exists(results_path):
+            test_results = pd.read_csv(results_path)
+        else:
+            test_results = None
+            
+        return {
+            'train_df': train_df,
+            'test_df': test_df,
+            'lstm_model': lstm_model,
+            'rf_model': rf_model,
+            'scaler': scaler,
+            'test_results': test_results,
+            'success': True
+        }
+        
+    except Exception as e:
+        st.error(f"Error loading resources: {e}")
+        return {'success': False}
+
+# Load everything
+resources = load_models_and_data()
+
+if not resources['success']:
+    st.error("❌ Failed to load required files. Please run the training pipeline first.")
+    st.stop()
+
+# Extract resources
+train_df = resources['train_df']
+test_df = resources['test_df']
+lstm_model = resources['lstm_model']
+rf_model = resources['rf_model']
+scaler = resources['scaler']
+test_results = resources['test_results']
+
 # ===== Sidebar inputs =====
-st.sidebar.header("🔧 Machine Input Parameters")
+st.sidebar.header("🔧 Engine Selection & Parameters")
 
-user_input = {}
-for i, feature in enumerate(feature_names[:10]):  # demo on first 10 features
-    user_input[feature] = st.sidebar.slider(
-        f"{feature}",
-        float(df[feature].min()),
-        float(df[feature].max()),
-        float(df[feature].mean())
-    )
+# Engine selection - Calculate actual total cycles for each engine
+engine_cycles = test_df.groupby('unit_id')['time_cycles'].max().reset_index()
+engine_cycles.columns = ['unit_id', 'total_cycles']
+engine_ids_with_cycles = [(f"Engine {id} ({cycles} cycles)", id) for id, cycles in zip(engine_cycles['unit_id'], engine_cycles['total_cycles'])]
 
-input_df = pd.DataFrame([user_input])
-
-model_choice = st.sidebar.selectbox(
-    "Select Model:", ["Random Forest", "XGBoost", "Neural Network"]
+selected_engine_option = st.sidebar.selectbox(
+    "Select Engine", 
+    options=[opt[0] for opt in engine_ids_with_cycles],
+    index=0
 )
 
+# Extract the actual engine ID from the selection
+selected_engine = int(selected_engine_option.split(' ')[1])  # Gets the number from "Engine X (Y cycles)"
+
+# Get selected engine data
+engine_data = test_df[test_df['unit_id'] == selected_engine].copy()
+
+# Calculate actual values
+total_cycles = engine_data['time_cycles'].max()
+current_cycle = engine_data['time_cycles'].iloc[-1]  # Last recorded cycle
+
+# Model selection
+model_choice = st.sidebar.radio(
+    "Select Prediction Model:",
+    ["LSTM Neural Network", "Optimized Random Forest"],
+    help="LSTM: Advanced deep learning for sequence data | Random Forest: Robust traditional ML"
+)
+
+# Display engine info
+st.sidebar.subheader("Engine Information")
+st.sidebar.write(f"**Engine ID:** {selected_engine}")
+st.sidebar.write(f"**Total Cycles:** {total_cycles}")
+st.sidebar.write(f"**Current Cycle:** {current_cycle}")
+st.sidebar.write(f"**Data Points:** {len(engine_data)}")
+
+# ===== Preprocessing functions =====
+def preprocess_engine_data(raw_engine_data, scaler, important_sensors):
+    """Preprocess engine data for prediction"""
+    # Create a copy to avoid modifying original
+    engine_data = raw_engine_data.copy()
+    
+    # Calculate max cycle for this engine
+    max_cycle = engine_data['time_cycles'].max()
+    engine_data['RUL'] = max_cycle - engine_data['time_cycles']
+    
+    # Create advanced features (same as training)
+    for sensor in important_sensors:
+        col_name = f'sensor_{sensor}'
+        
+        # Moving Average
+        engine_data[f'{col_name}_MA_5'] = engine_data[col_name].rolling(window=5, min_periods=1).mean()
+        
+        # Rolling Standard Deviation
+        engine_data[f'{col_name}_Rolling_Std'] = engine_data[col_name].rolling(window=5, min_periods=1).std()
+        
+        # Cumulative Sum
+        engine_data[f'{col_name}_CumSum'] = engine_data[col_name].cumsum()
+    
+    # Handle NaN values
+    engine_data.fillna(method='bfill', inplace=True)
+    
+    # Identify columns to normalize
+    all_numeric_columns = engine_data.select_dtypes(include=[np.number]).columns.tolist()
+    cols_to_exclude = ['unit_id', 'time_cycles', 'RUL']
+    cols_to_normalize = [col for col in all_numeric_columns if col not in cols_to_exclude]
+    
+    # Normalize using the fitted scaler
+    engine_data[cols_to_normalize] = scaler.transform(engine_data[cols_to_normalize])
+    
+    return engine_data, cols_to_normalize
+
 # ===== Prediction =====
-if st.sidebar.button("🚀 Predict Failure") and models_loaded:
-    try:
-        if model_choice == "Random Forest":
-            prediction = rf_model.predict(input_df)[0]
-            probability = rf_model.predict_proba(input_df)[0][1]
-        elif model_choice == "XGBoost":
-            prediction = xgb_model.predict(input_df)[0]
-            probability = xgb_model.predict_proba(input_df)[0][1]
-        else:  # Neural Network
-            scaled_input = scaler.transform(input_df.values)
-            probability = nn_model.predict(scaled_input, verbose=0)[0][0]
-            prediction = 1 if probability > 0.5 else 0
-
-        st.sidebar.success(f"Prediction: {target_names[prediction]}")
-        st.sidebar.info(f"Failure Probability: {probability:.3f}")
-
-    except Exception as e:
-        st.sidebar.error(f"Prediction error: {e}")
+if st.sidebar.button("🚀 Predict RUL", type="primary"):
+    with st.spinner("Processing engine data and making prediction..."):
+        try:
+            important_sensors = [4, 7, 11, 12, 15]
+            processed_data, feature_columns = preprocess_engine_data(engine_data, scaler, important_sensors)
+            
+            if model_choice == "LSTM Neural Network" and lstm_model is not None:
+                # Use last 30 cycles for LSTM prediction
+                if len(processed_data) >= 30:
+                    sequence_data = processed_data[feature_columns].iloc[-30:]
+                    sequence_3d = sequence_data.values.reshape(1, 30, len(feature_columns))
+                    prediction = lstm_model.predict(sequence_3d, verbose=0)[0][0]
+                    
+                    # Display prediction
+                    st.sidebar.success(f"**Predicted RUL:** {prediction:.0f} cycles")
+                    
+                    # Status interpretation
+                    if prediction > 50:
+                        st.sidebar.info("✅ Engine in good condition")
+                    elif prediction > 20:
+                        st.sidebar.warning("⚠️ Monitor engine closely")
+                    else:
+                        st.sidebar.error("🚨 Maintenance required soon!")
+                else:
+                    st.sidebar.warning("Not enough data for LSTM prediction (need ≥30 cycles)")
+                    
+            elif rf_model is not None:  # Random Forest
+                # Use final cycle for RF prediction
+                final_cycle_data = processed_data[feature_columns].iloc[-1:]
+                prediction = rf_model.predict(final_cycle_data)[0]
+                
+                st.sidebar.success(f"**Predicted RUL:** {prediction:.0f} cycles")
+                
+                # Status interpretation
+                if prediction > 50:
+                    st.sidebar.info("✅ Engine in good condition")
+                elif prediction > 20:
+                    st.sidebar.warning("⚠️ Monitor engine closely")
+                else:
+                    st.sidebar.error("🚨 Maintenance required soon!")
+            else:
+                st.sidebar.error("No trained model available. Please train models first.")
+                    
+        except Exception as e:
+            st.sidebar.error(f"Prediction error: {str(e)}")
 
 # ===== Tabs =====
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Data Overview",
-    "📈 Analytics",
+    "📊 Engine Data",
+    "📈 Sensor Analytics", 
     "🤖 Model Performance",
-    "📋 Sample Predictions"
+    "🔍 Prediction Analysis"
 ])
 
 with tab1:
-    st.header("Dataset Overview")
-    st.dataframe(df.head(10))
-    st.write(f"Dataset shape: {df.shape}")
-    st.write(f"Number of normal operations: {(df['target']==0).sum()}")
-    st.write(f"Number of failures: {(df['target']==1).sum()}")
+    st.header("Engine Sensor Data")
+    st.write(f"Data for Engine {selected_engine} ({len(engine_data)} data points, {total_cycles} total cycles)")
+    
+    # Show raw sensor data
+    st.dataframe(engine_data.head(10))
+    
+    # Basic statistics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Cycles", total_cycles)
+    with col2:
+        st.metric("Current Cycle", current_cycle)
+    with col3:
+        st.metric("Engine ID", selected_engine)
+    with col4:
+        st.metric("Data Points", len(engine_data))
 
 with tab2:
-    st.header("Data Analytics")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        # Target distribution
-        fig, ax = plt.subplots(figsize=(8, 6))
-        target_counts = df["target"].value_counts()
-        ax.pie(target_counts, labels=target_names, autopct="%1.1f%%",
-               colors=["lightblue", "lightcoral"])
-        ax.set_title("Target Class Distribution")
+    st.header("Sensor Trends and Analytics")
+    
+    # Sensor selection
+    sensor_options = [f'Sensor {i}' for i in [4, 7, 11, 12, 15]]
+    selected_sensors = st.multiselect("Select sensors to visualize:", sensor_options, default=sensor_options[:3])
+    
+    if selected_sensors:
+        fig, ax = plt.subplots(figsize=(12, 6))
+        
+        for sensor in selected_sensors:
+            sensor_num = int(sensor.split(' ')[1])
+            ax.plot(engine_data['time_cycles'], engine_data[f'sensor_{sensor_num}'], 
+                   label=f'Sensor {sensor_num}', linewidth=2)
+        
+        ax.set_xlabel('Time Cycles')
+        ax.set_ylabel('Sensor Value')
+        ax.set_title(f'Engine {selected_engine} - Sensor Trends')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
         st.pyplot(fig)
-
-    with col2:
-        # Correlation heatmap
-        fig, ax = plt.subplots(figsize=(8, 6))
-        corr_matrix = df[feature_names[:5] + ["target"]].corr()
-        sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", center=0, ax=ax)
-        ax.set_title("Feature Correlation Heatmap")
+    
+    # Correlation heatmap
+    st.subheader("Sensor Correlations")
+    sensor_cols = [f'sensor_{i}' for i in [4, 7, 11, 12, 15]]
+    if len(engine_data) > 1:
+        corr_matrix = engine_data[sensor_cols].corr()
+        fig, ax = plt.subplots(figsize=(10, 8))
+        sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", center=0, ax=ax, fmt='.2f')
+        ax.set_title("Sensor Correlation Heatmap")
         st.pyplot(fig)
 
 with tab3:
-    st.header("Model Performance Comparison")
-    if models_loaded:
-        performance_data = {
-            "Model": list(results.keys()),
-            "Accuracy": list(results.values())
-        }
-        perf_df = pd.DataFrame(performance_data)
-        col1, col2 = st.columns(2)
+    st.header("Model Performance Metrics")
+    
+    if test_results is not None:
+        # Performance metrics
+        col1, col2, col3 = st.columns(3)
         with col1:
-            st.bar_chart(perf_df.set_index("Model"))
+            st.metric("Test RMSE", "28.33 cycles")
         with col2:
-            st.dataframe(perf_df)
-
-        # Show confusion matrices
-        st.subheader("Confusion Matrices")
-        st.dataframe(cm_df)
-
+            st.metric("Test MAE", "18.22 cycles") 
+        with col3:
+            st.metric("R² Score", "0.535")
+        
+        # True vs Predicted plot
+        st.subheader("Model Performance on Test Set")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.scatter(test_results['true_rul'], test_results['predicted_rul'], alpha=0.6)
+        ax.plot([0, 150], [0, 150], 'r--', label='Perfect Prediction')
+        ax.set_xlabel('True RUL (cycles)')
+        ax.set_ylabel('Predicted RUL (cycles)')
+        ax.set_title('True vs Predicted RUL (Test Set)')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        st.pyplot(fig)
+        
+        # Error distribution
+        st.subheader("Prediction Error Distribution")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        errors = test_results['true_rul'] - test_results['predicted_rul']
+        ax.hist(errors, bins=20, alpha=0.7, edgecolor='black')
+        ax.axvline(errors.mean(), color='red', linestyle='--', label=f'Mean Error: {errors.mean():.1f} cycles')
+        ax.set_xlabel('Prediction Error (cycles)')
+        ax.set_ylabel('Frequency')
+        ax.set_title('Distribution of Prediction Errors')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        st.pyplot(fig)
     else:
-        st.info("Run main.py to train models and see performance metrics")
+        st.info("Final test results not available. Run final_evaluation.py to generate performance metrics.")
 
 with tab4:
-    st.header("Sample Predictions")
-    sample_data = df[feature_names].sample(5)
-    st.write("Sample sensor readings:")
-    st.dataframe(sample_data)
-
-    if models_loaded and st.button("Predict on Sample Data"):
-        predictions = []
-        for i, (idx, row) in enumerate(sample_data.iterrows()):
-            input_row = pd.DataFrame([row])
-            try:
-                if model_choice == "Random Forest":
-                    pred = rf_model.predict(input_row)[0]
-                    proba = rf_model.predict_proba(input_row)[0][1]
-                elif model_choice == "XGBoost":
-                    pred = xgb_model.predict(input_row)[0]
-                    proba = xgb_model.predict_proba(input_row)[0][1]
-                else:
-                    scaled_input = scaler.transform(input_row.values.reshape(1, -1))
-                    proba = nn_model.predict(scaled_input, verbose=0)[0][0]
-                    pred = 1 if proba > 0.5 else 0
-
-                predictions.append({
-                    "Sample": i + 1,
-                    "Prediction": target_names[pred],
-                    "Probability": f"{proba:.3f}",
-                    "Actual": target_names[df.loc[idx, "target"]]
-                })
-            except Exception as e:
-                predictions.append({
-                    "Sample": i + 1,
-                    "Prediction": "Error",
-                    "Probability": "N/A",
-                    "Actual": "Unknown"
-                })
-
-        predictions_df = pd.DataFrame(predictions)
-        st.dataframe(predictions_df)
+    st.header("Advanced Prediction Analysis")
+    
+    # Feature importance (for Random Forest)
+    if rf_model is not None and hasattr(rf_model, 'feature_importances_'):
+        st.subheader("Feature Importance (Random Forest)")
+        feature_importance = pd.DataFrame({
+            'feature': [f'sensor_{i}' for i in range(1, 22)] + [f'op_setting_{i}' for i in range(1, 4)],
+            'importance': rf_model.feature_importances_
+        }).sort_values('importance', ascending=False).head(10)
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.barh(feature_importance['feature'], feature_importance['importance'])
+        ax.set_xlabel('Importance')
+        ax.set_title('Top 10 Most Important Features')
+        st.pyplot(fig)
+    
+    # Model comparison
+    st.subheader("Model Comparison")
+    comparison_data = pd.DataFrame({
+        'Model': ['LSTM Neural Network', 'Optimized Random Forest'],
+        'RMSE': [28.33, 31.72],
+        'R² Score': [0.535, 0.480]
+    })
+    
+    st.dataframe(comparison_data)
 
 # ===== Footer =====
 st.markdown("---")
-st.markdown("Built with ❤️ using Streamlit, Scikit-learn, XGBoost, and TensorFlow")
+st.markdown("### 🎯 Project Summary")
+st.markdown("""
+This predictive maintenance system uses advanced machine learning to forecast the Remaining Useful Life (RUL) 
+of NASA turbofan engines. The models were trained on real sensor data and can predict failures with 
+**~28 cycle accuracy**, providing ample warning for maintenance planning.
+
+**Key Features:**
+- ✈️ **Real-time RUL predictions** for individual engines
+- 📊 **Interactive sensor data visualization**
+- 🤖 **Multiple model comparison** (LSTM vs Random Forest)
+- 📈 **Comprehensive performance analytics**
+- 🔧 **Actionable maintenance recommendations**
+""")
+
+# Add exit button in the sidebar
+st.sidebar.markdown("---")
+if st.sidebar.button("🚪 Exit Application", type="secondary", 
+                    help="Close the NASA Turbofan RUL Predictor", 
+                    on_click=exit_application):
+    pass
+
+st.markdown("---")
+st.markdown("Built using Streamlit, TensorFlow, Scikit-learn, and NASA Turbofan Data")

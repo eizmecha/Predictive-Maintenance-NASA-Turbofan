@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.preprocessing import MinMaxScaler
+import joblib
 
 def add_rul_column(df):
     # Calculate the maximum cycle each engine reaches before failure
@@ -68,13 +69,23 @@ def prepare_train_data(df, important_sensors):
     df_processed, fitted_scaler = normalize_data(df_processed, cols_to_normalize)
 
     print("Preprocessing complete! The data is now ready for modeling.")
+    
+    # FIXED: Use the correct variable name 'fitted_scaler' instead of 'scaler'
+    # Save the fitted scaler for later use on test data
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    scaler_path = os.path.join('models', 'fitted_scaler.pkl')
+    os.makedirs(os.path.dirname(scaler_path), exist_ok=True)
+    joblib.dump(fitted_scaler, scaler_path)  # FIXED: changed 'scaler' to 'fitted_scaler'
+    print(f"💾 Fitted scaler saved to: {scaler_path}")
+    
     return df_processed, fitted_scaler
 
 def load_raw_data(file_path):
     column_names = ['unit_id', 'time_cycles'] + [f'op_setting_{i}' for i in range(1,4)] + [f'sensor_{i}' for i in range(1,22)]
     
     try:
-        df = pd.read_csv(file_path, sep='\s+', header=None, names=column_names)
+        # FIXED: Use raw string to avoid escape sequence warning
+        df = pd.read_csv(file_path, sep=r'\s+', header=None, names=column_names)
         print(f"Raw data loaded successfully from: {file_path}")
         return df
     except FileNotFoundError:
@@ -84,6 +95,35 @@ def load_raw_data(file_path):
     except Exception as e:
         print(f"Error loading data: {e}")
         return None
+
+def preprocess_data(df, fit_scaler=True, scaler=None):
+    """
+    Main preprocessing function that can be used for both training and inference.
+    For training: fit_scaler=True, scaler=None
+    For inference: fit_scaler=False, scaler=previously_fitted_scaler
+    """
+    important_sensors = [4, 7, 11, 12, 15]
+    
+    # Add RUL column
+    df_processed = add_rul_column(df)
+    
+    # Create advanced features
+    df_processed = create_advanced_features(df_processed, important_sensors)
+    
+    # Identify columns to normalize
+    all_numeric_columns = df_processed.select_dtypes(include=[np.number]).columns.tolist()
+    cols_to_exclude = ['unit_id', 'time_cycles', 'RUL']
+    cols_to_normalize = [col for col in all_numeric_columns if col not in cols_to_exclude]
+    
+    # Normalize data
+    if fit_scaler:
+        df_processed, fitted_scaler = normalize_data(df_processed, cols_to_normalize)
+        return df_processed, fitted_scaler
+    else:
+        if scaler is None:
+            raise ValueError("Scaler must be provided when fit_scaler=False")
+        df_processed[cols_to_normalize] = scaler.transform(df_processed[cols_to_normalize])
+        return df_processed, scaler
 
 if __name__ == "__main__":
     """Main function to run the complete preprocessing pipeline"""
