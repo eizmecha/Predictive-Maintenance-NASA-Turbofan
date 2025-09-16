@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
 
-# Core dependencies
+# Core dependencies - matching your installed versions
 dependencies = [
     "numpy>=2.3.3",
     "pandas>=2.3.2",
@@ -49,9 +49,9 @@ all = [
     "ipython>=9.5.0"
 ]
 
-# Project scripts - ONLY ONE ENTRY
+# Project scripts - ONLY ONE ENTRY POINT
 [project.scripts]
-turbofan-cli = "main:main"
+turbofan-cli = "main:main"  # Use main.py as the entry point
 
 [build-system]
 requires = ["setuptools>=80.9.0"]
@@ -93,7 +93,7 @@ select = [
     "UP",  # pyupgrade
     "DJ",  # flake8-django
 ]
-ignore = ["E501"]
+ignore = ["E501"]  # Allow long lines (handled by black)
 exclude = [
     ".eggs",
     ".git",

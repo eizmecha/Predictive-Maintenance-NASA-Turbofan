@@ -1,13 +1,3 @@
-"""
-Model Training Module for Turbofan Engine RUL Prediction.
-
-This module provides functions to train, evaluate, and analyze multiple machine learning models
-for predicting the Remaining Useful Life (RUL) of aircraft engines.
-
-Author: Osamah
-Team: Data Detectives
-"""
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,18 +19,7 @@ plt.rcParams['figure.figsize'] = (10, 6)
 
 
 def prepare_data(df, test_size=0.2, random_state=42):
-    """
-    Prepares the processed data for modeling by splitting into features and target,
-    and then into training and validation sets.
 
-    Args:
-        df (pd.DataFrame): The fully processed dataframe from Phase 3.
-        test_size (float): Proportion of data to use for validation.
-        random_state (int): Random seed for reproducibility.
-
-    Returns:
-        tuple: X_train, X_val, y_train, y_val, feature_columns
-    """
     print("📊 Preparing data for modeling...")
     
     # Separate features (X) and target (y)
@@ -62,18 +41,7 @@ def prepare_data(df, test_size=0.2, random_state=42):
 
 
 def evaluate_model(model, model_name, X_train, y_train, X_val, y_val):
-    """
-    Trains a model and evaluates its performance on the validation set.
 
-    Args:
-        model: sklearn-compatible model object
-        model_name (str): Name of the model for reporting
-        X_train, y_train: Training data
-        X_val, y_val: Validation data
-
-    Returns:
-        tuple: trained_model, predictions, performance_metrics
-    """
     print(f"\n🔍 Training {model_name}...")
     
     # Train the model
@@ -100,16 +68,7 @@ def evaluate_model(model, model_name, X_train, y_train, X_val, y_val):
 
 
 def train_all_models(X_train, y_train, X_val, y_val):
-    """
-    Trains and evaluates multiple regression models.
 
-    Args:
-        X_train, y_train: Training data
-        X_val, y_val: Validation data
-
-    Returns:
-        dict: Dictionary containing performance metrics for all models
-    """
     print("🚀 Training Multiple Models for Comparison")
     print("=" * 50)
     
@@ -139,15 +98,7 @@ def train_all_models(X_train, y_train, X_val, y_val):
 
 
 def plot_performance_comparison(performance_dict):
-    """
-    Creates a visual comparison of model performance.
 
-    Args:
-        performance_dict (dict): Dictionary containing model performance metrics
-
-    Returns:
-        pd.DataFrame: DataFrame with performance metrics for all models
-    """
     # Create DataFrame for easy comparison
     perf_df = pd.DataFrame.from_dict(
         {k: {m: v for m, v in v.items() if m != 'Model'} 
@@ -193,14 +144,7 @@ def plot_performance_comparison(performance_dict):
 
 
 def plot_true_vs_predicted(y_true, y_pred, model_name):
-    """
-    Plots true vs predicted values for a model.
 
-    Args:
-        y_true: Actual target values
-        y_pred: Predicted target values
-        model_name (str): Name of the model for the plot title
-    """
     # Calculate metrics for the plot title
     metrics = calculate_metrics(y_true, y_pred)
     
@@ -223,15 +167,7 @@ def plot_true_vs_predicted(y_true, y_pred, model_name):
 
 
 def plot_feature_importance(model, feature_names, model_name, top_n=15):
-    """
-    Plots feature importance for tree-based models.
 
-    Args:
-        model: Trained tree-based model (RandomForest or XGBoost)
-        feature_names (list): List of feature names
-        model_name (str): Name of the model for the plot title
-        top_n (int): Number of top features to display
-    """
     # Get feature importance
     if hasattr(model, 'feature_importances_'):
         importance = model.feature_importances_
@@ -267,18 +203,8 @@ def plot_feature_importance(model, feature_names, model_name, top_n=15):
     
     return feat_imp
 
-
 def main(data_path=None):
-    """
-    Main function to run the complete model training pipeline.
 
-    Args:
-        data_path (str): Path to the processed training data CSV file. 
-                         If None, uses default path from project root.
-
-    Returns:
-        tuple: best_model, performance_dataframe
-    """
     print("🎯 Starting Model Training Pipeline")
     print("=" * 50)
     
@@ -334,6 +260,6 @@ if __name__ == "__main__":
     try:
         main()  # No argument needed - uses default path
     except FileNotFoundError as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f" Unexpected error: {e}")

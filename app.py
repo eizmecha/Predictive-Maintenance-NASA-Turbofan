@@ -68,39 +68,17 @@ def load_models_and_data():
         
         # Load processed training data for reference
         train_data_path = os.path.join(project_root, 'data', 'processed', 'train_FD001_processed.csv')
-        if os.path.exists(train_data_path):
-            train_df = pd.read_csv(train_data_path)
-        else:
-            st.warning("Processed training data not found. Using test data for demo.")
-            train_df = None
+        train_df = pd.read_csv(train_data_path)
         
         # Load test data for demo
         test_data_path = os.path.join(project_root, 'data', 'test_FD001.txt')
         column_names = ['unit_id', 'time_cycles'] + [f'op_setting_{i}' for i in range(1,4)] + [f'sensor_{i}' for i in range(1,22)]
         test_df = pd.read_csv(test_data_path, sep=r'\s+', header=None, names=column_names)
         
-        # Load models - check if they exist first
-        lstm_model_path = os.path.join(project_root, 'models', 'lstm_model.keras')
-        rf_model_path = os.path.join(project_root, 'models', 'random_forest_model.pkl')
-        scaler_path = os.path.join(project_root, 'models', 'fitted_scaler.pkl')
-        
-        if os.path.exists(lstm_model_path):
-            lstm_model = tf.keras.models.load_model(lstm_model_path)
-        else:
-            st.warning("LSTM model not found")
-            lstm_model = None
-            
-        if os.path.exists(rf_model_path):
-            rf_model = joblib.load(rf_model_path)
-        else:
-            st.warning("Random Forest model not found")
-            rf_model = None
-            
-        if os.path.exists(scaler_path):
-            scaler = joblib.load(scaler_path)
-        else:
-            st.warning("Scaler not found")
-            scaler = None
+        # Load models
+        lstm_model = tf.keras.models.load_model(os.path.join(project_root, 'models', 'lstm_model.keras'))
+        rf_model = joblib.load(os.path.join(project_root, 'models', 'optimized_random_forest_model.pkl'))
+        scaler = joblib.load(os.path.join(project_root, 'models', 'fitted_scaler.pkl'))
         
         # Load final test results
         results_path = os.path.join(project_root, 'results', 'final_test_results.csv')
@@ -169,7 +147,7 @@ model_choice = st.sidebar.radio(
     help="LSTM: Advanced deep learning for sequence data | Random Forest: Robust traditional ML"
 )
 
-# Display engine info
+# Display engine info - FIXED: Show actual different values
 st.sidebar.subheader("Engine Information")
 st.sidebar.write(f"**Engine ID:** {selected_engine}")
 st.sidebar.write(f"**Total Cycles:** {total_cycles}")
@@ -219,7 +197,7 @@ if st.sidebar.button("🚀 Predict RUL", type="primary"):
             important_sensors = [4, 7, 11, 12, 15]
             processed_data, feature_columns = preprocess_engine_data(engine_data, scaler, important_sensors)
             
-            if model_choice == "LSTM Neural Network" and lstm_model is not None:
+            if model_choice == "LSTM Neural Network":
                 # Use last 30 cycles for LSTM prediction
                 if len(processed_data) >= 30:
                     sequence_data = processed_data[feature_columns].iloc[-30:]
@@ -239,7 +217,7 @@ if st.sidebar.button("🚀 Predict RUL", type="primary"):
                 else:
                     st.sidebar.warning("Not enough data for LSTM prediction (need ≥30 cycles)")
                     
-            elif rf_model is not None:  # Random Forest
+            else:  # Random Forest
                 # Use final cycle for RF prediction
                 final_cycle_data = processed_data[feature_columns].iloc[-1:]
                 prediction = rf_model.predict(final_cycle_data)[0]
@@ -253,8 +231,6 @@ if st.sidebar.button("🚀 Predict RUL", type="primary"):
                     st.sidebar.warning("⚠️ Monitor engine closely")
                 else:
                     st.sidebar.error("🚨 Maintenance required soon!")
-            else:
-                st.sidebar.error("No trained model available. Please train models first.")
                     
         except Exception as e:
             st.sidebar.error(f"Prediction error: {str(e)}")
@@ -271,8 +247,8 @@ with tab1:
     st.header("Engine Sensor Data")
     st.write(f"Data for Engine {selected_engine} ({len(engine_data)} data points, {total_cycles} total cycles)")
     
-    # Show raw sensor data
-    st.dataframe(engine_data.head(10))
+    # Show raw sensor data - FIXED: use width instead of use_container_width
+    st.dataframe(engine_data.head(10), width='stretch')
     
     # Basic statistics
     col1, col2, col3, col4 = st.columns(4)
@@ -333,7 +309,7 @@ with tab3:
         # True vs Predicted plot
         st.subheader("Model Performance on Test Set")
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.scatter(test_results['true_rul'], test_results['predicted_rul'], alpha=0.6)
+        ax.scatter(test_results['True_RUL'], test_results['Predicted_RUL'], alpha=0.6)
         ax.plot([0, 150], [0, 150], 'r--', label='Perfect Prediction')
         ax.set_xlabel('True RUL (cycles)')
         ax.set_ylabel('Predicted RUL (cycles)')
@@ -345,7 +321,7 @@ with tab3:
         # Error distribution
         st.subheader("Prediction Error Distribution")
         fig, ax = plt.subplots(figsize=(10, 6))
-        errors = test_results['true_rul'] - test_results['predicted_rul']
+        errors = test_results['True_RUL'] - test_results['Predicted_RUL']
         ax.hist(errors, bins=20, alpha=0.7, edgecolor='black')
         ax.axvline(errors.mean(), color='red', linestyle='--', label=f'Mean Error: {errors.mean():.1f} cycles')
         ax.set_xlabel('Prediction Error (cycles)')
@@ -361,10 +337,10 @@ with tab4:
     st.header("Advanced Prediction Analysis")
     
     # Feature importance (for Random Forest)
-    if rf_model is not None and hasattr(rf_model, 'feature_importances_'):
+    if hasattr(rf_model, 'feature_importances_'):
         st.subheader("Feature Importance (Random Forest)")
         feature_importance = pd.DataFrame({
-            'feature': [f'sensor_{i}' for i in range(1, 22)] + [f'op_setting_{i}' for i in range(1, 4)],
+            'feature': train_df.columns.drop(['unit_id', 'time_cycles', 'RUL']),
             'importance': rf_model.feature_importances_
         }).sort_values('importance', ascending=False).head(10)
         
@@ -374,7 +350,7 @@ with tab4:
         ax.set_title('Top 10 Most Important Features')
         st.pyplot(fig)
     
-    # Model comparison
+    # Model comparison - FIXED: use width instead of use_container_width
     st.subheader("Model Comparison")
     comparison_data = pd.DataFrame({
         'Model': ['LSTM Neural Network', 'Optimized Random Forest'],
@@ -382,7 +358,7 @@ with tab4:
         'R² Score': [0.535, 0.480]
     })
     
-    st.dataframe(comparison_data)
+    st.dataframe(comparison_data, width='stretch')
 
 # ===== Footer =====
 st.markdown("---")
@@ -405,6 +381,7 @@ st.sidebar.markdown("---")
 if st.sidebar.button("🚪 Exit Application", type="secondary", 
                     help="Close the NASA Turbofan RUL Predictor", 
                     on_click=exit_application):
+    
     pass
 
 st.markdown("---")

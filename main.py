@@ -1,7 +1,3 @@
-"""
-main.py - Main entry point for the C-MAPSS RUL Prediction Project.
-Handles training, evaluation, and prediction using the saved models.
-"""
 
 import argparse
 import os
