@@ -1,4 +1,4 @@
-```markdown
+
 # Predictive Maintenance for NASA Turbofan Engines
 
 A comprehensive machine learning project that predicts the Remaining Useful Life (RUL) of aircraft engines using sensor data from NASA's C-MAPSS dataset. This project implements both traditional machine learning and deep learning approaches for predictive maintenance.
