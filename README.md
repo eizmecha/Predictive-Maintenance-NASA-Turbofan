@@ -16,7 +16,7 @@ A comprehensive machine learning project that predicts the Remaining Useful Life
 This project addresses the critical challenge of predicting when aircraft engines will require maintenance by analyzing sensor data patterns. The system can forecast engine failures with **~31 cycle accuracy**, providing ample warning for maintenance planning and reducing operational costs.
 
 **Key Achievements:**
-- ✅ **95.2% prediction accuracy** on test data
+- ✅ **73% prediction accuracy** on test data
 - ✅ **31.5 cycles RMSE** - High precision in RUL estimation
 - ✅ **Multiple model comparison** (Random Forest, XGBoost, LSTM, Linear Regression)
 - ✅ **Interactive web dashboard** for real-time predictions
