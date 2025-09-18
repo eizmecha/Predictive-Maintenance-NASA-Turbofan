@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# Predictive-Maintenance-NASA-Turbofan
-Predictive Maintenance for NASA Turbofan Engines using Machine Learning & Deep Learning
-=======
 
 # Predictive Maintenance for NASA Turbofan Engines
 
@@ -276,4 +272,3 @@ For questions or support regarding this project:
 
 **⭐ If you find this project useful, please give it a star on GitHub!**
 
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
