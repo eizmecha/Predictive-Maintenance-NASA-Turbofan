@@ -27,13 +27,8 @@ dl = [
 ]
 
 app = [
-<<<<<<< HEAD
-    "streamlit>=1.46.0",  # Will install latest
-    "plotly>=5.24.1"      # Will install latest
-=======
     "streamlit>=1.46.0",
     "plotly>=5.24.1"
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 ]
 
 dev = [
@@ -54,15 +49,9 @@ all = [
     "ipython>=9.5.0"
 ]
 
-<<<<<<< HEAD
-# Project scripts
-[project.scripts]
-turbofan-cli = "main:main"
-=======
 # Project scripts - ONLY ONE ENTRY POINT
 [project.scripts]
 turbofan-cli = "main:main"  # Use main.py as the entry point
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 
 [build-system]
 requires = ["setuptools>=80.9.0"]
@@ -122,9 +111,6 @@ exclude = [
 ]
 
 [tool.ruff.isort]
-<<<<<<< HEAD
-known-first-party = ["src"]
-=======
 known-first-party = ["src"]
 
 [tool.uv]
@@ -135,4 +121,3 @@ dev-dependencies = [
     "isort",
     "flake8"
 ]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
