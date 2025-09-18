@@ -1,0 +1,2 @@
+[console_scripts]
+turbofan-cli = main:main
