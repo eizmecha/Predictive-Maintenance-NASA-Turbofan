@@ -170,7 +170,7 @@ uv run python -m src.models.lstm_model
 ```
 **Evaluation  a model:**
 ```bash
-uv run python -m src.models.final__evaluation
+uv run python -m src.models.final_evaluation
 ```
 **Launch the interactive dashboard:**
 ```bash
