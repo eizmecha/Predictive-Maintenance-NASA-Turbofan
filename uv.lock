@@ -172,8 +172,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "black"
 version = "25.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -194,7 +192,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "bleach"
 version = "6.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -400,8 +397,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "coverage"
 version = "7.10.6"
 source = { registry = "https://pypi.org/simple" }
@@ -455,7 +450,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "cycler"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -514,8 +508,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "flake8"
 version = "7.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -530,7 +522,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "flatbuffers"
 version = "25.2.10"
 source = { registry = "https://pypi.org/simple" }
@@ -707,8 +698,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "iniconfig"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -718,7 +707,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "ipykernel"
 version = "6.30.1"
 source = { registry = "https://pypi.org/simple" }
@@ -788,8 +776,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "isort"
 version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -799,7 +785,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "jedi"
 version = "0.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1257,8 +1242,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "mccabe"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1268,7 +1251,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "mdurl"
 version = "0.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1314,8 +1296,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "mypy-extensions"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1325,7 +1305,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "namex"
 version = "0.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1597,8 +1576,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "pathspec"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1608,7 +1585,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1698,8 +1674,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1709,7 +1683,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "predictive-maintenance-turbofan"
 version = "1.0.0"
 source = { editable = "." }
@@ -1751,8 +1724,6 @@ dl = [
     { name = "tensorflow" },
 ]
 
-<<<<<<< HEAD
-=======
 [package.dev-dependencies]
 dev = [
     { name = "black" },
@@ -1762,7 +1733,6 @@ dev = [
     { name = "pytest-cov" },
 ]
 
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 [package.metadata]
 requires-dist = [
     { name = "ipython", marker = "extra == 'all'", specifier = ">=9.5.0" },
@@ -1793,8 +1763,6 @@ requires-dist = [
 ]
 provides-extras = ["dl", "app", "dev", "all"]
 
-<<<<<<< HEAD
-=======
 [package.metadata.requires-dev]
 dev = [
     { name = "black" },
@@ -1804,7 +1772,6 @@ dev = [
     { name = "pytest-cov" },
 ]
 
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 [[package]]
 name = "prometheus-client"
 version = "0.22.1"
@@ -1896,8 +1863,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "pycodestyle"
 version = "2.14.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1907,7 +1872,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "pycparser"
 version = "2.23"
 source = { registry = "https://pypi.org/simple" }
@@ -1930,8 +1894,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "pyflakes"
 version = "3.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1941,7 +1903,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "pygments"
 version = "2.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1960,8 +1921,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "pytest"
 version = "8.4.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1992,7 +1951,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 7425d379da1134feb34c16f8e235b1fbc9c58cee
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
