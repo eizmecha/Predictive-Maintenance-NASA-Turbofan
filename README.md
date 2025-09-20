@@ -17,7 +17,7 @@ This project addresses the critical challenge of predicting when aircraft engine
 
 **Key Achievements:**
 - ✅ **85.5% prediction accuracy** on test data
-- ✅ **31.5 cycles RMSE** - High precision in RUL estimation
+- ✅ **28.5 cycles RMSE** - High precision in RUL estimation
 - ✅ **Multiple model comparison** (Random Forest, XGBoost, LSTM, Linear Regression)
 - ✅ **Interactive web dashboard** for real-time predictions
 - ✅ **Comprehensive data pipeline** from raw data to deployment
@@ -185,7 +185,7 @@ uv run streamlit run app.py
 |-------|------|-----|----------|---------------|
 | Random Forest | 31.50 | 21.95 | 0.7828 | 1.3 min |
 | XGBoost | 34.28 | 24.24 | 0.7428 | 0.7 min |
-| LSTM | 28.33 | 18.22 | 0.8350 | 5.2 min |
+| LSTM | 27.78 | 18.22 | 0.8350 | 5.2 min |
 | Linear Regression | 38.98 | 30.13 | 0.6675 | 0.3 min |
 
 ### Key Findings
