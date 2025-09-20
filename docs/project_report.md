@@ -62,9 +62,9 @@ Predictive maintenance aims to forecast equipment failures before they occur. In
 ✅ LSTM outperformed all others due to sequence learning ability.
 
 ### Final Test Performance
-- **MAE**: 21.52  
-- **RMSE**: 28.90  
-- **R²**: 0.516  
+- **MAE**: 18.52  
+- **RMSE**: 27.78  
+- **R²**: 0.586  
 
 ### Discussion
 - Validation results were excellent; test performance dropped.  
