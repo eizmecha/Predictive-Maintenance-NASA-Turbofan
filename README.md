@@ -25,7 +25,7 @@ This project addresses the critical challenge of predicting when aircraft engine
 ## 🚀 Installation and Setup
 
 ### Prerequisites
-- Python =>3.13.5
+- Python =>3.13
 - UV package manager
 
 ### Installation Steps
