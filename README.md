@@ -8,7 +8,7 @@ A comprehensive machine learning project that predicts the Remaining Useful Life
 | AC.NO | Name          | Role                  | Contributions |
 |-------|---------------|-----------------------|---------------|
 | 202270050    | Osamah        | Data/Model Engineer   | Data preprocessing,  model development |
-| 202270129     | Eiz-Lead Developer | ML Engineer           | Model optimization, evaluation metrics, LSTM implementation |
+| 202270129     | Eiz   Lead Developer | ML Engineer           | Model optimization, evaluation metrics, LSTM implementation |
 | 202270372     | Ali   | Data Analyst          | EDA, visualization, performance analysis,feature engineering |
 
 ## 📋 Project Overview
